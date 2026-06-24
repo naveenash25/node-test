@@ -59,3 +59,19 @@ export const verifySuperAdmin = (req, res, next) => {
         next(createError(500, err.message));
     }
 };
+
+export const verifyIsSameUser = (req, res, next) => {
+    try {
+
+        const { userId } = req.params;
+
+        if (req.user._id.toString() !== userId.toString()) {
+            return next(createError(403, 'Access denied'));
+        }
+
+        next();
+
+    } catch (err) {
+        next(createError(500, err.message));
+    }
+};

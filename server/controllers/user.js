@@ -1,6 +1,7 @@
 import User from '../models/user.js'
 import Lead from '../models/lead.js'
 import { createError } from '../utils/error.js'
+import { validateCreateUser, validateUpdateUser } from '../utils/users.validators.js'
 import bcrypt from 'bcryptjs'
 
 
@@ -107,9 +108,13 @@ export const getEmployees = async (req, res, next) => {
 
 export const createClient = async (req, res, next) => {
     try {
+        const errors = await validateCreateUser(User, req.body);
+        if (errors.length > 0) {
+            return next(createError(400, errors.join(', ')));
+        }
 
-        const findedUser = await User.findOne({ email: req.body.email })
-        if (Boolean(findedUser)) return next(createError(400, 'Email already exist'))
+        // const findedUser = await User.findOne({ email: req.body.email })
+        // if (Boolean(findedUser)) return next(createError(400, 'Email already exist'))
 
         const result = await User.create({ ...req.body, role: 'client' })
         res.status(200).json({ result, message: 'client created seccessfully', success: true })
@@ -121,8 +126,13 @@ export const createClient = async (req, res, next) => {
 export const createEmployee = async (req, res, next) => {
     try {
 
-        const findedUser = await User.findOne({ username: req.body.username })
-        if (Boolean(findedUser)) return next(createError(400, 'Username already exist'))
+        const errors = await validateCreateUser(User, req.body);
+        if (errors.length > 0) {
+            return next(createError(400, errors.join(', ')));
+        }
+
+        // const findedUser = await User.findOne({ username: req.body.username })
+        // if (Boolean(findedUser)) return next(createError(400, 'Username already exist'))
 
         const { password } = req.body
         const hashedPassword = await bcrypt.hash(password, 12)
@@ -151,6 +161,63 @@ export const updateRole = async (req, res, next) => {
         next(createError(500, err.message))
     }
 }
+
+export const updateUser = async (req, res, next) => {
+    try {
+
+        const { userId } = req.params;
+
+        const existingUser = await User.findById(userId);
+
+        if (!existingUser) {
+            return next(createError(404, 'User not found'));
+        }
+
+        const errors = await validateUpdateUser(
+            User,
+            existingUser,
+            req.body
+        );
+
+        if (errors.length > 0) {
+            return next(createError(400, errors.join(', ')));
+        }
+
+        const updateData = {
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            username: req.body.username,
+            phone: req.body.phone,
+            email: req.body.email
+        };
+
+        // Update password only if supplied
+        if (req.body.password?.trim()) {
+            updateData.password = await bcrypt.hash(
+                req.body.password,
+                12
+            );
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        res.status(200).json({
+            result: updatedUser,
+            message: 'User updated successfully',
+            success: true
+        });
+
+    } catch (err) {
+        next(createError(500, err.message));
+    }
+};
 
 export const deleteUser = async (req, res, next) => {
     try {

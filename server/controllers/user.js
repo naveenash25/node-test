@@ -183,12 +183,20 @@ export const updateUser = async (req, res, next) => {
             return next(createError(400, errors.join(', ')));
         }
 
+        const {
+            firstName,
+            lastName,
+            username,
+            phone,
+            email
+        } = req.body;
+
         const updateData = {
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            username: req.body.username,
-            phone: req.body.phone,
-            email: req.body.email
+            firstName,
+            lastName,
+            username,
+            phone,
+            email
         };
 
         // Update password only if supplied

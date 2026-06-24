@@ -21,7 +21,7 @@ router.post('/create/employee', verifyToken, verifyManager, createEmployee)
 
 // PUT
 router.put('/update-role/:userId', verifyToken, verifyManager, updateRole)
-router.put('/update-user/:userId', verifyToken, verifyManager, updateUser)
+router.put('/update/:userId', verifyToken, verifyManager, updateUser)
 
 // DELETE
 router.delete('/delete/:userId', verifyToken, verifySuperAdmin, deleteUser)
